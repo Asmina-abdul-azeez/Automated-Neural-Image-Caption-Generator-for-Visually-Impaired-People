@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* CSS comes here */
+        #video {
+            border: 1px solid black;
+            width: 320px;
+            height: 240px;
+        }
+    
+        
+    
+        #canvas {
+            display: none;
+        }
+    
+        .camera {
+            width: 340px;
+            display: inline-block;
+        }
+    
+        .output {
+            width: 340px;
+            display: inline-block;
+            margin-top: 50px;
+            
+        }
+    
+        #startbutton {
+            margin-top: 20px;
+            display: block;
+            
+            margin-left: auto;
+            margin-right: auto;
+            bottom: 36px;
+            padding: 10px;
+            background-color: #37b933;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            color: rgba(255, 255, 255, 1.0);
+            cursor: pointer;
+            border-radius:15px;
+        }
+    
+        .contentarea {
+            
+            font-size: 16px;
+            font-family: Arial;
+            text-align: center;
+
+        }
+        .caption
+        {
+            margin-top:20px;
+           
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 25px;
+            border: 2px solid #73AD21;
+            padding: 20px;
+            width: 900px;
+            height: 25px;
+        }
+        #button
+        {
+            background-color: transparent;
+            outline: none;
+            border: none;
+        }
+        #link
+        {
+            background-color: transparent;
+            outline: none;
+            border: none;
+        }
+        </style>
+</head>
+<body>
+    <div class="contentarea">
+        <h1>
+            Capture Photo
+        </h1>
+        <div class="camera">
+            <video id="video">Video stream not available.</video>
+        </div>
+        <div><button id="startbutton">Take photo</button></div>
+        <canvas id="canvas"></canvas>
+        <form action="" method="post">
+            <input type="text" id="link" name="link">
+            <button id="button" type="submit"></button>
+        </form>
+        <div class="output">
+            
+            <img id="photo" >
+            {% if results %}
+        <div class="row">
+            <div class="col-sm-4">
+                <img src="{{results.image}}">
+            </div>
+            <div class="col-sm-8">
+
+                <p class="text">Generated Caption : </p>
+                <p><b> {{results.description}} </b> </p>
+            </div>
+        </div>
+    {% endif %}
+
+            
+
+        </div>
+        
+    </div>
+    
+    
+ 
+    <script>
+        /* JS comes here */
+        (function() {
+    
+            var width = 320; // We will scale the photo width to this
+            var height = 0; // This will be computed based on the input stream
+    
+            var streaming = false;
+    
+            var video = null;
+            var canvas = null;
+            var photo = null;
+            var startbutton = null;
+            var text=null;
+            var button=null;
+    
+            function startup() {
+                video = document.getElementById('video');
+                canvas = document.getElementById('canvas');
+                anchor = document.getElementById('anchor');
+                photo = document.getElementById('photo');
+                startbutton = document.getElementById('startbutton');
+                text=document.getElementById('link')
+                button=document.getElementById('button')
+    
+                navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: false
+                    })
+                    .then(function(stream) {
+                        video.srcObject = stream;
+                        video.play();
+                    })
+                    .catch(function(err) {
+                        console.log("An error occurred: " + err);
+                    });
+    
+                video.addEventListener('canplay', function(ev) {
+                    if (!streaming) {
+                        height = video.videoHeight / (video.videoWidth / width);
+    
+                        if (isNaN(height)) {
+                            height = width / (4 / 3);
+                        }
+    
+                        video.setAttribute('width', width);
+                        video.setAttribute('height', height);
+                        canvas.setAttribute('width', width);
+                        canvas.setAttribute('height', height);
+                        streaming = true;
+                    }
+                }, false);
+    
+                startbutton.addEventListener('click', function(ev) {
+                    takepicture();
+                    ev.preventDefault();
+                }, false);
+    
+                
+            }
+    
+    
+            function clearphoto() {
+                var context = canvas.getContext('2d');
+                context.fillStyle = "#AAA";
+                context.fillRect(0, 0, canvas.width, canvas.height);
+    
+                var data = canvas.toDataURL('image/png');
+                photo.setAttribute('src', data);
+                
+            }
+    
+            function takepicture() {
+                var context = canvas.getContext('2d');
+                if (width && height) {
+                    canvas.width = width;
+                    canvas.height = height;
+                    context.drawImage(video, 0, 0, width, height);
+    
+                    var data = canvas.toDataURL('image/png');
+                    var img = canvas.toDataURL('image/png');
+                    img = img.replace('data:image/png;base64,', '');
+
+                    text.setAttribute("value", img)
+                    button.click()
+                    
+                   
+                } else {
+                    clearphoto();
+                }
+            }
+    
+            window.addEventListener('load', startup, false);
+        })();
+        </script>
+    
+    
+   
+    
+</body>
+</html>
